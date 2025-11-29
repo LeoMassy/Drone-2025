@@ -92,6 +92,16 @@
             50% { transform: translateY(-15px); }
         }
 
+        /* Propeller Animation */
+        @keyframes propellerSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .propeller {
+            transform-origin: center;
+            animation: propellerSpin 0.1s linear infinite;
+        }
+
         /* Glassmorphism Card */
         .glass-card {
             background: rgba(30, 41, 59, 0.4);
@@ -107,6 +117,12 @@
 
         .tech-text-shadow {
             text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        /* Shine Animation for Conclusion */
+        @keyframes shine {
+            0% { transform: skewX(-20deg) translateX(-150%); }
+            100% { transform: skewX(-20deg) translateX(150%); }
         }
 
         /* Language Utility */
@@ -169,7 +185,7 @@
             </div>
             <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">
                 <span class="lang-ja">ドローンジャーナリズムと<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-tech-purple tech-text-shadow">AI社会の夜明け</span></span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-tech-purple tech-text-shadow">AI社会</span></span>
                 <span class="lang-en hidden">Drone Journalism & The Dawn of<br>
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-tech-purple tech-text-shadow">AI Society</span></span>
             </h1>
@@ -211,14 +227,69 @@
                     </div>
                 </div>
                 <div class="fade-in-section relative">
-                    <!-- Visual Representation -->
+                    <!-- Visual Representation with SVG Drone -->
                     <div class="relative w-full aspect-video glass-card rounded-xl overflow-hidden flex items-center justify-center group">
                         <div class="absolute inset-0 bg-gradient-to-br from-neon-blue/10 to-tech-purple/10"></div>
-                        <i class="fas fa-drone text-6xl text-white/80 drone-hover z-10"></i>
+                        
+                        <!-- Drone SVG Graphic -->
+                        <div class="relative w-64 h-64 drone-hover z-10">
+                            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">
+                                <!-- Body -->
+                                <path d="M100 80 L120 90 L115 110 L85 110 L80 90 Z" fill="#1e293b" stroke="#00f3ff" stroke-width="2"/>
+                                <circle cx="100" cy="100" r="10" fill="#00f3ff" fill-opacity="0.5" />
+                                
+                                <!-- Arms -->
+                                <line x1="80" y1="90" x2="50" y2="60" stroke="#94a3b8" stroke-width="4"/>
+                                <line x1="120" y1="90" x2="150" y2="60" stroke="#94a3b8" stroke-width="4"/>
+                                <line x1="85" y1="110" x2="50" y2="140" stroke="#94a3b8" stroke-width="4"/>
+                                <line x1="115" y1="110" x2="150" y2="140" stroke="#94a3b8" stroke-width="4"/>
+                                
+                                <!-- Rotors (with spin animation) -->
+                                <g class="propeller" style="transform-origin: 50px 60px;">
+                                    <circle cx="50" cy="60" r="25" stroke="#00f3ff" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+                                    <line x1="25" y1="60" x2="75" y2="60" stroke="#00f3ff" stroke-width="2"/>
+                                    <line x1="50" y1="35" x2="50" y2="85" stroke="#00f3ff" stroke-width="2"/>
+                                </g>
+                                <g class="propeller" style="transform-origin: 150px 60px;">
+                                    <circle cx="150" cy="60" r="25" stroke="#00f3ff" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+                                    <line x1="125" y1="60" x2="175" y2="60" stroke="#00f3ff" stroke-width="2"/>
+                                    <line x1="150" y1="35" x2="150" y2="85" stroke="#00f3ff" stroke-width="2"/>
+                                </g>
+                                <g class="propeller" style="transform-origin: 50px 140px;">
+                                    <circle cx="50" cy="140" r="25" stroke="#00f3ff" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+                                    <line x1="25" y1="140" x2="75" y2="140" stroke="#00f3ff" stroke-width="2"/>
+                                    <line x1="50" y1="115" x2="50" y2="165" stroke="#00f3ff" stroke-width="2"/>
+                                </g>
+                                <g class="propeller" style="transform-origin: 150px 140px;">
+                                    <circle cx="150" cy="140" r="25" stroke="#00f3ff" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+                                    <line x1="125" y1="140" x2="175" y2="140" stroke="#00f3ff" stroke-width="2"/>
+                                    <line x1="150" y1="115" x2="150" y2="165" stroke="#00f3ff" stroke-width="2"/>
+                                </g>
+
+                                <!-- Camera / Sensor -->
+                                <path d="M95 115 L105 115 L100 125 Z" fill="#ff2a6d" />
+                                <line x1="100" y1="125" x2="100" y2="180" stroke="#ff2a6d" stroke-width="1" stroke-dasharray="2 2" opacity="0.5" />
+                                <circle cx="100" cy="180" r="3" fill="#ff2a6d" opacity="0.8">
+                                    <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+                                    <animate attributeName="r" values="3;10;3" dur="1.5s" repeatCount="indefinite" />
+                                </circle>
+                            </svg>
+                        </div>
+
                         <!-- Scanning UI -->
-                        <div class="absolute inset-0 border-2 border-white/5 m-4 rounded">
-                            <div class="absolute top-2 left-2 text-[10px] font-display text-neon-blue">REC ● 00:12:43</div>
-                            <div class="absolute bottom-2 right-2 text-[10px] font-display text-white">ALT: 120m / SPD: 45km/h</div>
+                        <div class="absolute inset-0 border-2 border-white/5 m-4 rounded pointer-events-none">
+                            <div class="absolute top-2 left-2 text-[10px] font-display text-neon-blue flex items-center gap-2">
+                                <span class="w-2 h-2 bg-alert-red rounded-full animate-pulse"></span> REC ● 00:12:43
+                            </div>
+                            <div class="absolute bottom-2 right-2 text-[10px] font-display text-white text-right">
+                                <div>ALT: 120m</div>
+                                <div>SPD: 45km/h</div>
+                                <div>BAT: 84%</div>
+                            </div>
+                            <!-- Crosshair Overlay -->
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 border border-neon-blue/30"></div>
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-px bg-neon-blue/20"></div>
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-40 bg-neon-blue/20"></div>
                         </div>
                     </div>
                     <!-- History Tag -->
@@ -659,23 +730,102 @@
         </div>
     </section>
 
-    <!-- Conclusion -->
-    <footer class="py-16 border-t border-slate-800 bg-black text-center">
-        <div class="container mx-auto px-6 fade-in-section">
-            <h2 class="text-3xl font-bold mb-6">CONCLUSION</h2>
-            <p class="text-slate-400 max-w-2xl mx-auto mb-8 leading-loose">
-                <span class="lang-ja">ドローンジャーナリズムとAI社会は、私たちの「視点」と「知能」を物理的にも論理的にも拡張します。<br>
-                しかし、その中心にあるべきなのは常に<span class="text-white font-bold">「人間中心の倫理観」</span>です。<br>
-                テクノロジーを監視の道具にするか、共生の翼にするか。<br>
-                それは私たちの選択にかかっています。</span>
-                <span class="lang-en hidden">Drone journalism and AI society extend our "perspective" and "intelligence" both physically and logically.<br>
-                However, at the center must always be <span class="text-white font-bold">"human-centric ethics"</span>.<br>
-                Whether technology becomes a tool for surveillance or wings for coexistence...<br>
-                That depends on our choices.</span>
-            </p>
-            <div class="text-slate-600 text-sm font-display tracking-widest">
-                &copy; 2024 FUTURE JOURNALISM REPORT
+    <!-- Conclusion (Redesigned) -->
+    <footer class="relative py-24 bg-deep-space overflow-hidden">
+        <!-- Background Effects -->
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_#1e293b_0%,_#0a0a12_100%)]"></div>
+        <div class="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-neon-blue/20 to-transparent opacity-50"></div>
+        
+        <!-- Animated Grid Floor -->
+        <div class="absolute bottom-0 w-full h-full" 
+             style="background-image: linear-gradient(0deg, transparent 24%, rgba(0, 243, 255, .1) 25%, rgba(0, 243, 255, .1) 26%, transparent 27%, transparent 74%, rgba(0, 243, 255, .1) 75%, rgba(0, 243, 255, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 243, 255, .1) 25%, rgba(0, 243, 255, .1) 26%, transparent 27%, transparent 74%, rgba(0, 243, 255, .1) 75%, rgba(0, 243, 255, .1) 76%, transparent 77%, transparent); background-size: 50px 50px; transform: perspective(500px) rotateX(60deg) translateY(100px) scale(2); opacity: 0.3;">
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10 fade-in-section">
+            <div class="flex flex-col lg:flex-row items-center justify-center gap-12">
+                <!-- Text Content -->
+                <div class="lg:w-1/2">
+                    <h2 class="text-4xl md:text-5xl font-display font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-white tracking-tighter">
+                        <span class="lang-ja">結論と今後の展望</span>
+                        <span class="lang-en hidden">Conclusion & Perspectives</span>
+                    </h2>
+                    
+                    <div class="glass-card p-8 rounded-xl border-l-4 border-neon-blue shadow-[0_0_50px_rgba(0,243,255,0.05)]">
+                        <p class="text-slate-300 leading-relaxed font-light text-justify mb-6">
+                            <span class="lang-ja">
+                                本考察の結論として、ドローンジャーナリズムとAIの融合は、報道の<strong class="text-neon-blue">「空間的拡張」</strong>と<strong class="text-neon-blue">「分析的深化」</strong>を同時にもたらす不可逆的な技術革新であると定義できる。<br><br>
+                                しかし、この全展望監視（パノプティコン）的な視座は、必然的に個人のプライバシー権や自律性との相克を生む。我々に求められるのは、技術決定論に陥ることなく、社会的受容性と倫理的整合性を担保した<strong class="text-tech-purple">「ガバナンスモデル」</strong>の構築である。<br><br>
+                                最終的に、このテクノロジーが民主主義を強化する「公器」となるか、あるいは統制の道具となるかは、設計段階における我々の主体的価値判断に委ねられている。
+                            </span>
+                            <span class="lang-en hidden">
+                                In conclusion, the integration of drone journalism and AI represents an irreversible technological innovation that simultaneously delivers <strong class="text-neon-blue">"spatial expansion"</strong> and <strong class="text-neon-blue">"analytical deepening"</strong> of reporting.<br><br>
+                                However, this panopticon-like perspective inevitably conflicts with individual privacy rights and autonomy. We are required to construct a <strong class="text-tech-purple">"governance model"</strong> that ensures social acceptance and ethical consistency, without falling into technological determinism.<br><br>
+                                Ultimately, whether this technology becomes a "public instrument" strengthening democracy or a tool for control depends on our subjective value judgments at the design stage.
+                            </span>
+                        </p>
+                        <div class="flex items-center gap-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                            <span>Key Pillars:</span>
+                            <span class="px-2 py-1 bg-slate-800 rounded text-neon-blue">Spatial Expansion</span>
+                            <span class="px-2 py-1 bg-slate-800 rounded text-tech-purple">Governance</span>
+                            <span class="px-2 py-1 bg-slate-800 rounded text-alert-red">Ethics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Content (Drone Blueprint) -->
+                <div class="lg:w-1/2 relative group">
+                     <div class="absolute inset-0 bg-neon-blue/20 blur-3xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                     <div class="relative glass-card p-6 rounded-2xl border border-white/10">
+                        <div class="absolute top-4 left-4 text-xs text-neon-blue font-display">SCHEMATIC: AERO-01</div>
+                        <div class="w-full h-64 flex items-center justify-center">
+                            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-[0_0_15px_rgba(0,243,255,0.3)]">
+                                <!-- Grid lines for blueprint feel -->
+                                <path d="M10 100 H190 M100 10 V190" stroke="#1e293b" stroke-width="1" />
+                                <circle cx="100" cy="100" r="80" stroke="#1e293b" stroke-width="1" stroke-dasharray="4 4" />
+
+                                <!-- Drone Body (Wireframe style) -->
+                                <path d="M100 80 L120 90 L115 110 L85 110 L80 90 Z" fill="none" stroke="#00f3ff" stroke-width="1"/>
+                                <circle cx="100" cy="100" r="8" stroke="#00f3ff" stroke-width="1" />
+                                
+                                <!-- Arms -->
+                                <line x1="80" y1="90" x2="50" y2="60" stroke="#94a3b8" stroke-width="2" stroke-opacity="0.5"/>
+                                <line x1="120" y1="90" x2="150" y2="60" stroke="#94a3b8" stroke-width="2" stroke-opacity="0.5"/>
+                                <line x1="85" y1="110" x2="50" y2="140" stroke="#94a3b8" stroke-width="2" stroke-opacity="0.5"/>
+                                <line x1="115" y1="110" x2="150" y2="140" stroke="#94a3b8" stroke-width="2" stroke-opacity="0.5"/>
+                                
+                                <!-- Rotors -->
+                                <circle cx="50" cy="60" r="20" stroke="#00f3ff" stroke-width="1" stroke-dasharray="2 2" class="propeller" style="transform-origin: 50px 60px; animation-duration: 3s;"/>
+                                <circle cx="150" cy="60" r="20" stroke="#00f3ff" stroke-width="1" stroke-dasharray="2 2" class="propeller" style="transform-origin: 150px 60px; animation-duration: 3s;"/>
+                                <circle cx="50" cy="140" r="20" stroke="#00f3ff" stroke-width="1" stroke-dasharray="2 2" class="propeller" style="transform-origin: 50px 140px; animation-duration: 3s;"/>
+                                <circle cx="150" cy="140" r="20" stroke="#00f3ff" stroke-width="1" stroke-dasharray="2 2" class="propeller" style="transform-origin: 150px 140px; animation-duration: 3s;"/>
+
+                                <!-- Data Nodes -->
+                                <circle cx="50" cy="60" r="2" fill="#fff" />
+                                <circle cx="150" cy="60" r="2" fill="#fff" />
+                                <circle cx="50" cy="140" r="2" fill="#fff" />
+                                <circle cx="150" cy="140" r="2" fill="#fff" />
+                                
+                                <!-- Connection Lines -->
+                                <path d="M50 60 L100 100 L150 140" stroke="#bc13fe" stroke-width="1" stroke-opacity="0.6">
+                                    <animate attributeName="stroke-dasharray" from="0, 200" to="200, 0" dur="2s" repeatCount="indefinite" />
+                                </path>
+                            </svg>
+                        </div>
+                        <!-- Tech Stats -->
+                        <div class="mt-4 grid grid-cols-2 gap-2 text-[10px] font-display text-slate-400">
+                            <div class="border-b border-white/10 pb-1">STATUS: OPERATIONAL</div>
+                            <div class="border-b border-white/10 pb-1 text-right">NET: CONNECTED</div>
+                            <div>AI CORE: V.4.2</div>
+                            <div class="text-right">LATENCY: 12ms</div>
+                        </div>
+                     </div>
+                </div>
             </div>
+        </div>
+
+        <!-- Footer Copyright -->
+        <div class="relative z-10 mt-20 border-t border-slate-800 pt-8 text-center text-slate-500 text-sm font-display tracking-[0.3em] uppercase">
+            &copy; 2025 Future Journalism Report
         </div>
     </footer>
 
