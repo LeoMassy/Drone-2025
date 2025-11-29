@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+  <defs>
+    <linearGradient id="g2" x1="0" x2="1"><stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#4fd1c5"/></linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="transparent"/>
+  <g transform="translate(40,30)">
+    <rect x="260" y="40" width="180" height="120" rx="12" fill="#06121a" stroke="#0b2b36"/>
+    <circle cx="350" cy="100" r="36" fill="url(#g2)"/>
+    <path d="M60 160 L140 80 L220 160" stroke="#7dd3fc" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <text x="20" y="220" fill="#9fb3c8" font-size="14">AI: 解析・自律飛行（イメージ）</text>
+  </g>
+</svg>
