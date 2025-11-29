@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドローンジャーナリズムとAI社会 - Future Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                        display: ['"Rajdhani"', 'sans-serif'],
+                    },
+                    colors: {
+                        'neon-blue': '#00f3ff',
+                        'deep-space': '#0a0a12',
+                        'tech-purple': '#bc13fe',
+                        'alert-red': '#ff2a6d',
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #1f2937 1px, transparent 1px), linear-gradient(to bottom, #1f2937 1px, transparent 1px)",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a12;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f3ff;
+        }
+
+        /* Animations */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            will-change: opacity, visibility;
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .hud-line {
+            position: fixed;
+            background: rgba(0, 243, 255, 0.1);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 10px #00f3ff;
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .drone-hover {
+            animation: droneHover 4s ease-in-out infinite;
+        }
+
+        @keyframes droneHover {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .tech-text-shadow {
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        /* Language Utility */
+        .lang-en.hidden { display: none; }
+        .lang-ja.hidden { display: none; }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- HUD Background Elements -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute top-0 left-10 w-px h-full bg-gradient-to-b from-transparent via-slate-700 to-transparent opacity-20"></div>
+        <div class="absolute top-0 right-10 w-px h-full bg-gradient-to-b from-transparent via-slate-700 to-transparent opacity-20"></div>
+        <div class="absolute top-10 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent opacity-20"></div>
+        <div class="absolute bottom-10 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent opacity-20"></div>
+        
+        <!-- Crosshairs -->
+        <div class="absolute top-10 left-10 w-4 h-4 border-l-2 border-t-2 border-neon-blue opacity-50"></div>
+        <div class="absolute top-10 right-10 w-4 h-4 border-r-2 border-t-2 border-neon-blue opacity-50"></div>
+        <div class="absolute bottom-10 left-10 w-4 h-4 border-l-2 border-b-2 border-neon-blue opacity-50"></div>
+        <div class="absolute bottom-10 right-10 w-4 h-4 border-r-2 border-b-2 border-neon-blue opacity-50"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-deep-space/80 backdrop-blur-md border-b border-white/10">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-drone text-neon-blue text-2xl"></i>
+                <span class="font-display font-bold text-xl tracking-wider">AERO<span class="text-neon-blue">JOURNALISM</span></span>
+            </div>
+            
+            <div class="flex items-center gap-8">
+                <div class="hidden md:flex gap-8 text-sm font-display tracking-widest text-slate-400">
+                    <a href="#intro" class="hover:text-neon-blue transition-colors">INTRO</a>
+                    <a href="#impact" class="hover:text-neon-blue transition-colors">IMPACT</a>
+                    <a href="#risks" class="hover:text-neon-blue transition-colors">RISKS</a>
+                    <a href="#ai-society" class="hover:text-neon-blue transition-colors">AI SOCIETY</a>
+                </div>
+                <!-- Language Toggle -->
+                <button id="lang-toggle" class="font-display text-sm font-bold border border-white/20 px-3 py-1 rounded hover:border-neon-blue hover:text-neon-blue transition-all flex items-center gap-2">
+                    <span id="lang-label">EN</span>
+                    <i class="fas fa-globe"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="intro" class="relative h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-deep-space via-transparent to-transparent"></div>
+        
+        <!-- Animated Background Circle -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-neon-blue/20 animate-pulse"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-dashed border-tech-purple/20 animate-[spin_10s_linear_infinite]"></div>
+
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <div class="inline-block px-4 py-1 border border-neon-blue/50 rounded-full bg-neon-blue/10 text-neon-blue text-xs font-display tracking-[0.2em] mb-6 backdrop-blur-sm">
+                SYSTEM STATUS: RECORDING
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">
+                <span class="lang-ja">ドローンジャーナリズムと<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-tech-purple tech-text-shadow">AI社会の夜明け</span></span>
+                <span class="lang-en hidden">Drone Journalism & The Dawn of<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-tech-purple tech-text-shadow">AI Society</span></span>
+            </h1>
+            <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
+                <span class="lang-ja">空からの視点が、真実を可視化する。<br>
+                テクノロジーが変える報道の未来と、私たちの生活環境への影響を探るアカデミック・レポート。</span>
+                <span class="lang-en hidden">Perspectives from the sky visualize the truth.<br>
+                An academic report exploring the future of reporting transformed by technology and its impact on our living environment.</span>
+            </p>
+            <a href="#definition" class="group inline-flex items-center gap-3 px-8 py-4 bg-white text-deep-space font-bold rounded hover:bg-neon-blue transition-all duration-300">
+                <span class="lang-ja">レポート解析を開始</span>
+                <span class="lang-en hidden">Initialize Analysis</span>
+                <i class="fas fa-arrow-down group-hover:translate-y-1 transition-transform"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Section 1: Definition & History -->
+    <section id="definition" class="py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div class="fade-in-section">
+                    <h2 class="font-display text-neon-blue text-lg tracking-widest mb-2">01. DEFINITION</h2>
+                    <h3 class="text-4xl font-bold mb-6">
+                        <span class="lang-ja">ドローンジャーナリズムとは？</span>
+                        <span class="lang-en hidden">What is Drone Journalism?</span>
+                    </h3>
+                    <p class="text-slate-300 leading-relaxed mb-6 text-lg">
+                        <span class="lang-ja">無人航空機（UAV/UAS）を報道目的で活用する手法です。<br>
+                        従来は高コストなヘリコプターでしか成し得なかった「空からの視点」を、低コストかつ機動的に実現。危険地帯や広範囲の被災状況を、安全な場所から詳細に記録します。</span>
+                        <span class="lang-en hidden">The practice of utilizing Unmanned Aerial Vehicles (UAV/UAS) for reporting purposes.<br>
+                        It realizes the "perspective from the sky"—previously only possible with high-cost helicopters—at low cost and high mobility. It records dangerous zones and widespread disaster conditions in detail from a safe distance.</span>
+                    </p>
+                    <div class="border-l-4 border-neon-blue pl-6 py-2 bg-slate-800/50">
+                        <p class="text-sm text-slate-400 italic">
+                            <span class="lang-ja">「空からの視点」が、民主的な意思決定の新たな材料となる。</span>
+                            <span class="lang-en hidden">"Perspectives from the sky" become new materials for democratic decision-making.</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="fade-in-section relative">
+                    <!-- Visual Representation -->
+                    <div class="relative w-full aspect-video glass-card rounded-xl overflow-hidden flex items-center justify-center group">
+                        <div class="absolute inset-0 bg-gradient-to-br from-neon-blue/10 to-tech-purple/10"></div>
+                        <i class="fas fa-drone text-6xl text-white/80 drone-hover z-10"></i>
+                        <!-- Scanning UI -->
+                        <div class="absolute inset-0 border-2 border-white/5 m-4 rounded">
+                            <div class="absolute top-2 left-2 text-[10px] font-display text-neon-blue">REC ● 00:12:43</div>
+                            <div class="absolute bottom-2 right-2 text-[10px] font-display text-white">ALT: 120m / SPD: 45km/h</div>
+                        </div>
+                    </div>
+                    <!-- History Tag -->
+                    <div class="absolute -bottom-6 -right-6 bg-slate-800 p-4 rounded-lg border border-slate-700 shadow-xl max-w-xs z-20">
+                        <h4 class="text-neon-blue font-bold text-sm mb-1"><i class="fas fa-history mr-2"></i>History</h4>
+                        <p class="text-xs text-slate-400">
+                            <span class="lang-ja">2010年代前半、米ネブラスカ大学「Drone Journalism Lab」等により研究開始。日本でも中頃から導入が進む。</span>
+                            <span class="lang-en hidden">Started in early 2010s with research like "Drone Journalism Lab" at Univ. of Nebraska. Adoption in Japan grew from mid-2010s.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Use Cases (Cards) -->
+    <section id="usecases" class="py-24 bg-slate-900/50 relative overflow-hidden">
+        <!-- Decoration -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-neon-blue/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center mb-16 fade-in-section">
+                <h2 class="font-display text-tech-purple text-lg tracking-widest mb-2">02. USE CASES</h2>
+                <h3 class="text-3xl font-bold">
+                    <span class="lang-ja">具体的な活用フィールド</span>
+                    <span class="lang-en hidden">Specific Application Fields</span>
+                </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="glass-card p-8 rounded-xl fade-in-section hover:bg-slate-800/80 group cursor-default">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-house-tsunami text-2xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">
+                        <span class="lang-ja">災害報道</span>
+                        <span class="lang-en hidden">Disaster Reporting</span>
+                    </h4>
+                    <ul class="text-slate-400 text-sm space-y-2">
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-blue-500 mt-1"></i>
+                            <span class="lang-ja">広域被害の迅速な把握（洪水・土砂崩れ）</span>
+                            <span class="lang-en hidden">Rapid assessment of wide-area damage (floods, landslides)</span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-blue-500 mt-1"></i>
+                            <span class="lang-ja">避難路・インフラ断絶の可視化</span>
+                            <span class="lang-en hidden">Visualization of evacuation routes & infrastructure breaks</span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-blue-500 mt-1"></i>
+                            <span class="lang-ja">記者・クルーの安全確保</span>
+                            <span class="lang-en hidden">Ensuring safety of reporters and crew</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-card p-8 rounded-xl fade-in-section hover:bg-slate-800/80 group cursor-default" style="transition-delay: 100ms;">
+                    <div class="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-6 text-orange-400 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-users-viewfinder text-2xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">
+                        <span class="lang-ja">紛争・デモ報道</span>
+                        <span class="lang-en hidden">Conflict & Protest</span>
+                    </h4>
+                    <ul class="text-slate-400 text-sm space-y-2">
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-orange-500 mt-1"></i>
+                            <span class="lang-ja">群衆の規模・動きの俯瞰</span>
+                            <span class="lang-en hidden">Bird's-eye view of crowd size and movement</span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-orange-500 mt-1"></i>
+                            <span class="lang-ja">「上からの視点」による客観性の担保</span>
+                            <span class="lang-en hidden">Ensuring objectivity through "top-down perspective"</span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-exclamation-triangle text-alert-red mt-1"></i>
+                            <span class="lang-ja">撃墜リスク・軍事誤認への懸念</span>
+                            <span class="lang-en hidden">Risks of shoot-downs & military misidentification</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-card p-8 rounded-xl fade-in-section hover:bg-slate-800/80 group cursor-default" style="transition-delay: 200ms;">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-6 text-green-400 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-magnifying-glass-chart text-2xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">
+                        <span class="lang-ja">調査・データ報道</span>
+                        <span class="lang-en hidden">Investigative Data</span>
+                    </h4>
+                    <ul class="text-slate-400 text-sm space-y-2">
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="lang-ja">環境破壊（違法伐採・投棄）の長期観測</span>
+                            <span class="lang-en hidden">Long-term observation of environmental destruction</span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="lang-ja">センサー連携（大気質・放射線測定）</span>
+                            <span class="lang-en hidden">Sensor integration (air quality, radiation)</span>
+                        </li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-1"></i>
+                            <span class="lang-ja">「パブリック・ウォッチ」機能の強化</span>
+                            <span class="lang-en hidden">Strengthening the "Public Watch" function</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Impact & Risks (Split Layout) -->
+    <section id="impact" class="py-24">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Positive Impact -->
+                <div class="fade-in-section">
+                    <h3 class="flex items-center gap-3 text-2xl font-bold mb-8 text-neon-blue">
+                        <i class="fas fa-arrow-trend-up"></i>
+                        <span class="lang-ja">社会へのポジティブな影響</span>
+                        <span class="lang-en hidden">Positive Social Impact</span>
+                    </h3>
+                    <div class="space-y-6">
+                        <div class="flex gap-4 p-4 border border-slate-800 rounded-lg hover:border-neon-blue/50 transition-colors">
+                            <div class="text-3xl font-display text-slate-600 font-bold">01</div>
+                            <div>
+                                <h4 class="font-bold mb-1">
+                                    <span class="lang-ja">知る権利の拡大</span>
+                                    <span class="lang-en hidden">Expansion of Right to Know</span>
+                                </h4>
+                                <p class="text-sm text-slate-400">
+                                    <span class="lang-ja">市民がインフラの状況や環境変化を視覚的に理解しやすくなり、議論が活性化する。</span>
+                                    <span class="lang-en hidden">Citizens can visually understand infrastructure and environmental changes, stimulating debate.</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 p-4 border border-slate-800 rounded-lg hover:border-neon-blue/50 transition-colors">
+                            <div class="text-3xl font-display text-slate-600 font-bold">02</div>
+                            <div>
+                                <h4 class="font-bold mb-1">
+                                    <span class="lang-ja">コストと安全性の革命</span>
+                                    <span class="lang-en hidden">Cost & Safety Revolution</span>
+                                </h4>
+                                <p class="text-sm text-slate-400">
+                                    <span class="lang-ja">フリージャーナリストや中小メディアでも空撮が可能に。危険地帯への人の立ち入りリスクを低減。</span>
+                                    <span class="lang-en hidden">Enables aerial shots for freelancers and small media. Reduces risk of human entry into danger zones.</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 p-4 border border-slate-800 rounded-lg hover:border-neon-blue/50 transition-colors">
+                            <div class="text-3xl font-display text-slate-600 font-bold">03</div>
+                            <div>
+                                <h4 class="font-bold mb-1">
+                                    <span class="lang-ja">権力の監視（Public Watch）</span>
+                                    <span class="lang-en hidden">Public Watch</span>
+                                </h4>
+                                <p class="text-sm text-slate-400">
+                                    <span class="lang-ja">公共工事の不正や環境破壊の証拠を独自の視点で捉え、監視機能を強化する。</span>
+                                    <span class="lang-en hidden">Captures evidence of public works fraud or environmental damage, strengthening oversight.</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risks & Challenges -->
+                <div class="fade-in-section">
+                    <h3 class="flex items-center gap-3 text-2xl font-bold mb-8 text-alert-red">
+                        <i class="fas fa-shield-halved"></i>
+                        <span class="lang-ja">課題とリスク</span>
+                        <span class="lang-en hidden">Challenges & Risks</span>
+                    </h3>
+                    <div class="bg-alert-red/5 border border-alert-red/20 rounded-xl p-6 space-y-6 relative overflow-hidden">
+                        <!-- Warning Stripe -->
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-alert-red via-orange-500 to-alert-red"></div>
+
+                        <div>
+                            <h4 class="font-bold text-alert-red mb-2"><i class="fas fa-eye-slash mr-2"></i>
+                                <span class="lang-ja">プライバシーと監視社会</span>
+                                <span class="lang-en hidden">Privacy & Surveillance</span>
+                            </h4>
+                            <p class="text-sm text-slate-300">
+                                <span class="lang-ja">窓の中や庭など、プライベートな空間への侵害リスク。「報道の自由」と「個人の権利」のバランスが問われる。</span>
+                                <span class="lang-en hidden">Risks of intruding into private spaces like windows and gardens. Balancing "freedom of press" and "individual rights" is crucial.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-alert-red mb-2"><i class="fas fa-scale-balanced mr-2"></i>
+                                <span class="lang-ja">法規制の壁</span>
+                                <span class="lang-en hidden">Regulatory Barriers</span>
+                            </h4>
+                            <p class="text-sm text-slate-300">
+                                <span class="lang-ja">航空法、目視外飛行の制限、空港周辺の規制。法整備は発展途上であり、州や自治体レベルでの制限も増加中。</span>
+                                <span class="lang-en hidden">Aviation laws, BVLOS restrictions. Legal frameworks are developing, with increasing restrictions at local levels.</span>
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-alert-red mb-2"><i class="fas fa-book-medical mr-2"></i>
+                                <span class="lang-ja">倫理コードの必要性</span>
+                                <span class="lang-en hidden">Need for Ethical Codes</span>
+                            </h4>
+                            <p class="text-sm text-slate-300">
+                                <span class="lang-ja">法令遵守だけでなく、「何を撮り、何を撮らないか」という倫理規定（コード）の策定が急務。</span>
+                                <span class="lang-en hidden">Urgent need for ethical codes defining "what to film and what not to," beyond just legal compliance.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Lifestyle Changes -->
+    <section class="py-24 bg-gradient-to-b from-deep-space to-slate-900">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="font-display text-white/50 text-lg tracking-widest mb-2">LIFESTYLE SHIFT</h2>
+            <h3 class="text-3xl font-bold mb-12">
+                <span class="lang-ja">ドローンが変える生活環境</span>
+                <span class="lang-en hidden">How Drones Change Our Lives</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                <div class="relative group h-64 overflow-hidden fade-in-section">
+                    <div class="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-6 transition-transform duration-500 group-hover:-translate-y-full">
+                        <i class="fas fa-city text-4xl mb-4 text-slate-500"></i>
+                        <h4 class="text-xl font-bold">
+                            <span class="lang-ja">都市空間</span>
+                            <span class="lang-en hidden">Urban Space</span>
+                        </h4>
+                        <p class="text-xs mt-2 text-slate-400 uppercase tracking-widest">Urban Design</p>
+                    </div>
+                    <div class="absolute inset-0 bg-neon-blue/10 border border-neon-blue/30 flex flex-col items-center justify-center p-6 translate-y-full transition-transform duration-500 group-hover:translate-y-0 backdrop-blur-md">
+                        <h4 class="font-bold text-neon-blue mb-2">
+                            <span class="lang-ja">エアモビリティ社会</span>
+                            <span class="lang-en hidden">Air Mobility Society</span>
+                        </h4>
+                        <p class="text-sm text-slate-300">
+                            <span class="lang-ja">空の物流、点検、監視。離発着ポートを組み込んだ新たな都市設計へ。</span>
+                            <span class="lang-en hidden">Aerial logistics, inspection, surveillance. New urban designs incorporating drone ports.</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative group h-64 overflow-hidden fade-in-section" style="transition-delay: 100ms;">
+                    <div class="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-6 transition-transform duration-500 group-hover:-translate-y-full">
+                        <i class="fas fa-mountain-sun text-4xl mb-4 text-slate-500"></i>
+                        <h4 class="text-xl font-bold">
+                            <span class="lang-ja">地方・過疎地</span>
+                            <span class="lang-en hidden">Rural Areas</span>
+                        </h4>
+                        <p class="text-xs mt-2 text-slate-400 uppercase tracking-widest">Rural Support</p>
+                    </div>
+                    <div class="absolute inset-0 bg-tech-purple/10 border border-tech-purple/30 flex flex-col items-center justify-center p-6 translate-y-full transition-transform duration-500 group-hover:translate-y-0 backdrop-blur-md">
+                        <h4 class="font-bold text-tech-purple mb-2">
+                            <span class="lang-ja">生活インフラ支援</span>
+                            <span class="lang-en hidden">Infrastructure Support</span>
+                        </h4>
+                        <p class="text-sm text-slate-300">
+                            <span class="lang-ja">買い物難民支援、医薬品配送。人手不足社会の重要なライフラインとして機能。</span>
+                            <span class="lang-en hidden">Shopping support, medical delivery. Critical lifelines in a labor-shortage society.</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative group h-64 overflow-hidden fade-in-section" style="transition-delay: 200ms;">
+                    <div class="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-6 transition-transform duration-500 group-hover:-translate-y-full">
+                        <i class="fas fa-bridge-water text-4xl mb-4 text-slate-500"></i>
+                        <h4 class="text-xl font-bold">
+                            <span class="lang-ja">インフラ管理</span>
+                            <span class="lang-en hidden">Management</span>
+                        </h4>
+                        <p class="text-xs mt-2 text-slate-400 uppercase tracking-widest">Maintenance</p>
+                    </div>
+                    <div class="absolute inset-0 bg-green-500/10 border border-green-500/30 flex flex-col items-center justify-center p-6 translate-y-full transition-transform duration-500 group-hover:translate-y-0 backdrop-blur-md">
+                        <h4 class="font-bold text-green-400 mb-2">
+                            <span class="lang-ja">安全性向上</span>
+                            <span class="lang-en hidden">Safety Improvement</span>
+                        </h4>
+                        <p class="text-sm text-slate-300">
+                            <span class="lang-ja">橋梁・トンネル点検の効率化。災害時の早期復旧判断をサポート。</span>
+                            <span class="lang-en hidden">Efficient bridge/tunnel inspection. Supporting early recovery decisions during disasters.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: AI & Future (Highlight) -->
+    <section id="ai-society" class="py-24 relative overflow-hidden">
+        <!-- AI Background Effect -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(188,19,254,0.1),transparent_70%)]"></div>
+        <div class="scan-line absolute top-0 left-0"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="mb-16 fade-in-section">
+                <span class="inline-block px-3 py-1 bg-tech-purple/20 text-tech-purple rounded text-xs font-bold mb-4">INTEGRATION</span>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                    <span class="lang-ja">AIが拡張するドローンの脳</span>
+                    <span class="lang-en hidden">AI Expands the Drone's Brain</span>
+                </h2>
+                <p class="text-xl text-slate-300 max-w-3xl">
+                    <span class="lang-ja">ドローン単体では「目」に過ぎない。AIという「脳」と結びつくことで、その真価が発揮される。</span>
+                    <span class="lang-en hidden">A drone alone is just an "eye". Its true value is realized when connected to the "brain" of AI.</span>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+                <!-- AI Feature 1 -->
+                <div class="p-6 border-t-2 border-tech-purple bg-gradient-to-b from-tech-purple/5 to-transparent fade-in-section">
+                    <h3 class="text-xl font-bold mb-4 text-white"><i class="fas fa-brain mr-2 text-tech-purple"></i>
+                        <span class="lang-ja">映像解析・自動編集</span>
+                        <span class="lang-en hidden">Analysis & Editing</span>
+                    </h3>
+                    <p class="text-slate-400 text-sm">
+                        <span class="lang-ja">被災家屋の自動カウント、浸水エリア抽出、人流トラッキング。人間では処理しきれない膨大な映像を瞬時にデータ化。</span>
+                        <span class="lang-en hidden">Auto-counting damaged houses, extracting flood areas, tracking crowd flow. Instantly digitizing vast footage beyond human processing.</span>
+                    </p>
+                </div>
+                <!-- AI Feature 2 -->
+                <div class="p-6 border-t-2 border-tech-purple bg-gradient-to-b from-tech-purple/5 to-transparent fade-in-section" style="transition-delay: 100ms;">
+                    <h3 class="text-xl font-bold mb-4 text-white"><i class="fas fa-route mr-2 text-tech-purple"></i>
+                        <span class="lang-ja">自律飛行制御</span>
+                        <span class="lang-en hidden">Autonomous Flight</span>
+                    </h3>
+                    <p class="text-slate-400 text-sm">
+                        <span class="lang-ja">障害物回避、最適ルート計算、バッテリー管理。操縦者の負担を減らし、より複雑な任務を遂行可能に。</span>
+                        <span class="lang-en hidden">Obstacle avoidance, optimal route calculation, battery management. Reducing pilot burden for complex missions.</span>
+                    </p>
+                </div>
+                <!-- AI Feature 3 (Risk) -->
+                <div class="p-6 border-t-2 border-alert-red bg-gradient-to-b from-alert-red/5 to-transparent fade-in-section" style="transition-delay: 200ms;">
+                    <h3 class="text-xl font-bold mb-4 text-white"><i class="fas fa-user-secret mr-2 text-alert-red"></i>
+                        <span class="lang-ja">Deepfakeリスク</span>
+                        <span class="lang-en hidden">Deepfake Risks</span>
+                    </h3>
+                    <p class="text-slate-400 text-sm">
+                        <span class="lang-ja">AIによる映像加工・偽造の容易化。偽ニュースや世論操作への対抗として、高いメディアリテラシーが求められる。</span>
+                        <span class="lang-en hidden">Ease of AI video fabrication. High media literacy is required to counter fake news and manipulation.</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- AI Society Summary Box -->
+            <div class="glass-card rounded-2xl p-8 md:p-12 fade-in-section">
+                <h3 class="text-2xl font-bold mb-8 text-center border-b border-white/10 pb-4">
+                    <span class="lang-ja">AI社会全体への波及効果</span>
+                    <span class="lang-en hidden">Ripple Effects on AI Society</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-neon-blue font-bold mb-4">BENEFITS</h4>
+                        <ul class="space-y-4">
+                            <li class="flex gap-3">
+                                <i class="fas fa-plus-circle text-neon-blue mt-1"></i>
+                                <div>
+                                    <span class="block font-bold text-sm">
+                                        <span class="lang-ja">日常生活の最適化</span>
+                                        <span class="lang-en hidden">Optimization of Daily Life</span>
+                                    </span>
+                                    <span class="text-xs text-slate-400">
+                                        <span class="lang-ja">レコメンド、翻訳、自動運転支援による効率化。</span>
+                                        <span class="lang-en hidden">Efficiency via recommendation, translation, driving assistance.</span>
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3">
+                                <i class="fas fa-plus-circle text-neon-blue mt-1"></i>
+                                <div>
+                                    <span class="block font-bold text-sm">
+                                        <span class="lang-ja">産業・医療の革新</span>
+                                        <span class="lang-en hidden">Industrial & Medical Innovation</span>
+                                    </span>
+                                    <span class="text-xs text-slate-400">
+                                        <span class="lang-ja">画像診断支援、在庫管理、事務自動化による生産性向上。</span>
+                                        <span class="lang-en hidden">Productivity boost via diagnostic support, inventory control, automation.</span>
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3">
+                                <i class="fas fa-plus-circle text-neon-blue mt-1"></i>
+                                <div>
+                                    <span class="block font-bold text-sm">
+                                        <span class="lang-ja">教育の個別化</span>
+                                        <span class="lang-en hidden">Personalized Education</span>
+                                    </span>
+                                    <span class="text-xs text-slate-400">
+                                        <span class="lang-ja">個人のレベルに合わせた学習提供と創造性の拡張。</span>
+                                        <span class="lang-en hidden">Learning tailored to individual levels and expansion of creativity.</span>
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-alert-red font-bold mb-4">CHALLENGES</h4>
+                        <ul class="space-y-4">
+                            <li class="flex gap-3">
+                                <i class="fas fa-minus-circle text-alert-red mt-1"></i>
+                                <div>
+                                    <span class="block font-bold text-sm">
+                                        <span class="lang-ja">AI格差とバイアス</span>
+                                        <span class="lang-en hidden">AI Gap & Bias</span>
+                                    </span>
+                                    <span class="text-xs text-slate-400">
+                                        <span class="lang-ja">デジタルリテラシーによる格差、データ偏向による差別の助長。</span>
+                                        <span class="lang-en hidden">Gaps due to digital literacy, fostering discrimination via data bias.</span>
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3">
+                                <i class="fas fa-minus-circle text-alert-red mt-1"></i>
+                                <div>
+                                    <span class="block font-bold text-sm">
+                                        <span class="lang-ja">責任の所在</span>
+                                        <span class="lang-en hidden">Locus of Responsibility</span>
+                                    </span>
+                                    <span class="text-xs text-slate-400">
+                                        <span class="lang-ja">AIの判断ミスや自動運転事故の法的責任は誰にあるのか？</span>
+                                        <span class="lang-en hidden">Who is legally responsible for AI errors or autonomous accidents?</span>
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3">
+                                <i class="fas fa-minus-circle text-alert-red mt-1"></i>
+                                <div>
+                                    <span class="block font-bold text-sm">
+                                        <span class="lang-ja">雇用の変化</span>
+                                        <span class="lang-en hidden">Employment Shifts</span>
+                                    </span>
+                                    <span class="text-xs text-slate-400">
+                                        <span class="lang-ja">自動化による失業リスクと、新職種へのスキルトランスファー。</span>
+                                        <span class="lang-en hidden">Unemployment risk due to automation and skill transfer to new jobs.</span>
+                                    </span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conclusion -->
+    <footer class="py-16 border-t border-slate-800 bg-black text-center">
+        <div class="container mx-auto px-6 fade-in-section">
+            <h2 class="text-3xl font-bold mb-6">CONCLUSION</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto mb-8 leading-loose">
+                <span class="lang-ja">ドローンジャーナリズムとAI社会は、私たちの「視点」と「知能」を物理的にも論理的にも拡張します。<br>
+                しかし、その中心にあるべきなのは常に<span class="text-white font-bold">「人間中心の倫理観」</span>です。<br>
+                テクノロジーを監視の道具にするか、共生の翼にするか。<br>
+                それは私たちの選択にかかっています。</span>
+                <span class="lang-en hidden">Drone journalism and AI society extend our "perspective" and "intelligence" both physically and logically.<br>
+                However, at the center must always be <span class="text-white font-bold">"human-centric ethics"</span>.<br>
+                Whether technology becomes a tool for surveillance or wings for coexistence...<br>
+                That depends on our choices.</span>
+            </p>
+            <div class="text-slate-600 text-sm font-display tracking-widest">
+                &copy; 2024 FUTURE JOURNALISM REPORT
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Language Toggle Logic
+        const langToggle = document.getElementById('lang-toggle');
+        const langLabel = document.getElementById('lang-label');
+        let currentLang = 'ja';
+
+        langToggle.addEventListener('click', () => {
+            currentLang = currentLang === 'ja' ? 'en' : 'ja';
+            
+            // Update Toggle Button Text
+            langLabel.textContent = currentLang === 'ja' ? 'EN' : 'JP';
+
+            // Toggle Visibility Classes
+            if (currentLang === 'en') {
+                document.querySelectorAll('.lang-ja').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.lang-en').forEach(el => el.classList.remove('hidden'));
+            } else {
+                document.querySelectorAll('.lang-en').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.lang-ja').forEach(el => el.classList.remove('hidden'));
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // Animate only once
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-section').forEach((section) => {
+            observer.observe(section);
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
